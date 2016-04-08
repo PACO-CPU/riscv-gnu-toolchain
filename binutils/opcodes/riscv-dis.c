@@ -256,7 +256,10 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 	  print (info->stream, "0x%x",
 		 (unsigned) EXTRACT_UTYPE_IMM (l) >> RISCV_IMM_BITS);
 	  break;
-
+    case '@':
+      print (info->stream, "0x%x",
+         (unsigned) ((l & 0xfc000000) >> 26));
+      break;
 	case 'm':
 	  arg_print (info, EXTRACT_OPERAND (RM, l),
 		     riscv_rm, ARRAY_SIZE (riscv_rm));

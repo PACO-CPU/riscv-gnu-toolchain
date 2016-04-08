@@ -548,6 +548,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case 'V': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case '<': used_bits |= ENCODE_RVC_IMM(-1U); break;
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
+      case '@': used_bits |= 0xfc000000; break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
 	  default:
@@ -560,6 +561,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case '(': break;
       case ')': break;
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
+      case '@': used_bits |= 0xfc000000;break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -594,7 +596,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
   if (used_bits != required_bits)
     {
       as_bad (_("internal: bad RISC-V opcode (bits 0x%lx undefined): %s %s"),
-	      ~(long)(used_bits & required_bits), opc->name, opc->args);
+             ~(long)(used_bits & required_bits), opc->name, opc->args);
       return 0;
     }
   return 1;
@@ -774,7 +776,6 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	case '>':
 	  INSERT_OPERAND (SHAMT, insn, va_arg (args, int));
 	  continue;
-
 	case 'j':
 	case 'u':
 	case 'q':
@@ -1561,7 +1562,10 @@ rvc_lui:
 		  continue;
 		}
 	      break;
-
+        case '@':
+            ip->insn_opcode |= atoi(s) << 26;
+            ++s;
+            continue;
 	    case 'D':		/* floating point rd */
 	    case 'S':		/* floating point rs1 */
 	    case 'T':		/* floating point rs2 */

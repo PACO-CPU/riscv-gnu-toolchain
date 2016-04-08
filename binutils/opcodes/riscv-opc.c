@@ -191,6 +191,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"add",       "I",   "d,s,t",  MATCH_ADD, MASK_ADD, match_opcode, 0 },
 {"add",       "I",   "d,s,t,0",MATCH_ADD, MASK_ADD, match_opcode, 0 },
 {"add",       "I",   "d,s,j",  MATCH_ADDI, MASK_ADDI, match_opcode, INSN_ALIAS },
+{"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},
 {"la",        "I",   "d,A",  0,    (int) M_LA,  match_never, INSN_MACRO },
 {"lla",       "I",   "d,A",  0,    (int) M_LLA,  match_never, INSN_MACRO },
 {"la.tls.gd", "I",   "d,A",  0,    (int) M_LA_TLS_GD,  match_never, INSN_MACRO },
