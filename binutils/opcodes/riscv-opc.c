@@ -191,7 +191,6 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"add",       "I",   "d,s,t",  MATCH_ADD, MASK_ADD, match_opcode, 0 },
 {"add",       "I",   "d,s,t,0",MATCH_ADD, MASK_ADD, match_opcode, 0 },
 {"add",       "I",   "d,s,j",  MATCH_ADDI, MASK_ADDI, match_opcode, INSN_ALIAS },
-{"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},
 {"la",        "I",   "d,A",  0,    (int) M_LA,  match_never, INSN_MACRO },
 {"lla",       "I",   "d,A",  0,    (int) M_LLA,  match_never, INSN_MACRO },
 {"la.tls.gd", "I",   "d,A",  0,    (int) M_LA_TLS_GD,  match_never, INSN_MACRO },
@@ -610,6 +609,20 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"sfence.vm", "I",   "s",    MATCH_SFENCE_VM, MASK_SFENCE_VM, match_opcode, 0 },
 {"wfi",       "I",   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
 
+/* PACO custom IALU instructions */
+{"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},
+{"sub.approx", "I",  "d,s,t,@", MATCH_SUB_APPROX, MASK_SUB_APPROX, match_opcode, 0},
+{"mul.approx", "I",  "d,s,t,@", MATCH_MUL_APPROX, MASK_MUL_APPROX, match_opcode, 0},
+/* PACO custom FALU instructions */
+{"fadd.s.approx" , "F",  "D,S,T,@", MATCH_FADD_S_APPROX,  MASK_FADD_S_APPROX,  match_opcode, 0},
+{"fsub.s.approx" , "F",  "D,S,T,@", MATCH_FSUB_S_APPROX,  MASK_FSUB_S_APPROX,  match_opcode, 0},
+{"fmul.s.approx" , "F",  "D,S,T,@", MATCH_FMUL_S_APPROX,  MASK_FMUL_S_APPROX,  match_opcode, 0},
+{"fsqrt.s.approx", "F",  "D,S,@"  , MATCH_FSQRT_S_APPROX, MASK_FSQRT_S_APPROX, match_opcode, 0},
+{"fadd.d.approx" , "D",  "D,S,T,@", MATCH_FADD_D_APPROX,  MASK_FADD_D_APPROX,  match_opcode, 0},
+{"fsub.d.approx" , "D",  "D,S,T,@", MATCH_FSUB_D_APPROX,  MASK_FSUB_D_APPROX,  match_opcode, 0},
+{"fmul.d.approx" , "D",  "D,S,T,@", MATCH_FMUL_D_APPROX,  MASK_FMUL_D_APPROX,  match_opcode, 0},
+{"fsqrt.d.approx", "D",  "D,S,@"  , MATCH_FSQRT_D_APPROX, MASK_FSQRT_D_APPROX, match_opcode, 0},
+
 /* Rocket Custom Coprocessor extension */
 {"custom0",   "Xcustom", "d,s,t,^j", MATCH_CUSTOM0_RD_RS1_RS2, MASK_CUSTOM0_RD_RS1_RS2, match_opcode, 0},
 {"custom0",   "Xcustom", "d,s,^t,^j", MATCH_CUSTOM0_RD_RS1, MASK_CUSTOM0_RD_RS1, match_opcode, 0},
@@ -635,6 +648,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"custom3",   "Xcustom", "^d,s,t,^j", MATCH_CUSTOM3_RS1_RS2, MASK_CUSTOM3_RS1_RS2, match_opcode, 0},
 {"custom3",   "Xcustom", "^d,s,^t,^j", MATCH_CUSTOM3_RS1, MASK_CUSTOM3_RS1, match_opcode, 0},
 {"custom3",   "Xcustom", "^d,^s,^t,^j", MATCH_CUSTOM3, MASK_CUSTOM3, match_opcode, 0},
+
 };
 
 #define RISCV_NUM_OPCODES \

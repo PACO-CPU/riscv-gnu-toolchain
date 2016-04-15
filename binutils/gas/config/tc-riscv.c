@@ -1189,10 +1189,11 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   const char *args;
   char c = 0;
   struct riscv_opcode *insn, *end = &riscv_opcodes[NUMOPCODES];
-  char *argsStart;
+  char *argsStart, **endp = NULL;
   unsigned int regno;
   char save_c = 0;
-  int argnum;
+  int argnum, base;
+  unsigned int val;
   const struct percent_op_match *p;
   const char *error = "unrecognized opcode";
 
@@ -1563,8 +1564,19 @@ rvc_lui:
 		}
 	      break;
         case '@':
-            ip->insn_opcode |= atoi(s) << 26;
-            ++s;
+            base = 10;
+            if (strlen(s) > 1) { /* make sure we have more than one char */
+                if (s[1] == 'x') { /* do we have hex value? */
+                    base = 16;
+                }
+            }
+            val = strtoul(s, endp, base);
+            if (val > 63) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+            ip->insn_opcode |= val << 26;
+            s+=strlen(s);
             continue;
 	    case 'D':		/* floating point rd */
 	    case 'S':		/* floating point rs1 */
