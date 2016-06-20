@@ -549,6 +549,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case '<': used_bits |= ENCODE_RVC_IMM(-1U); break;
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
       case '@': used_bits |= 0xfc000000; break;
+      case '$': used_bits |= 0x3f00000; break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
 	  default:
@@ -562,6 +563,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case ')': break;
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '@': used_bits |= 0xfc000000;break;
+      case '$': used_bits |= 0x3f00000; break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -1574,8 +1576,23 @@ rvc_lui:
             if (val > 63) {
                 s += strlen(s);
                 break; /* goto error */
-            }
+            } 
             ip->insn_opcode |= val << 26;
+            s+=strlen(s);
+            continue;
+           case '$':
+            base = 10;
+            if (strlen(s) > 1) { /* make sure we have more than one char */
+                if (s[1] == 'x') { /* do we have hex value? */
+                    base = 16;
+                }
+            }
+            val = strtoul(s, endp, base);
+            if (val > 63) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+            ip->insn_opcode |= val << 20;
             s+=strlen(s);
             continue;
 	    case 'D':		/* floating point rd */

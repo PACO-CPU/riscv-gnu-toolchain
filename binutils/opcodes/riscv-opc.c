@@ -609,6 +609,10 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"sfence.vm", "I",   "s",    MATCH_SFENCE_VM, MASK_SFENCE_VM, match_opcode, 0 },
 {"wfi",       "I",   "",     MATCH_WFI, MASK_WFI, match_opcode, 0 },
 
+/*Paco lut instruction */
+
+{"lute", "I",  "d,s,$", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
+
 /* PACO custom IALU instructions */
 {"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},
 {"sub.approx", "I",  "d,s,t,@", MATCH_SUB_APPROX, MASK_SUB_APPROX, match_opcode, 0},
