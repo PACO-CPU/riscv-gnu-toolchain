@@ -612,6 +612,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 /*Paco lut instruction */
 
 {"lute", "I",  "d,s,$", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
+{"lutl", "I",  "s,$,#,&", MATCH_LUTL, MASK_LUTL, match_opcode, 0},
 
 /* PACO custom IALU instructions */
 {"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},

@@ -548,8 +548,10 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case 'V': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case '<': used_bits |= ENCODE_RVC_IMM(-1U); break;
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
-      case '@': used_bits |= 0xfc000000; break;
-      case '$': used_bits |= 0x3f00000; break;
+    case '@': used_bits |= 0xfc000000; break;
+    case '$': used_bits |= 0x3f00000; break;
+    case '#': used_bits |= 0x780; break;
+    case '&': used_bits |= 0x800; break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
 	  default:
@@ -564,6 +566,8 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '@': used_bits |= 0xfc000000;break;
       case '$': used_bits |= 0x3f00000; break;
+      case '#': used_bits |= 0x780; break;
+      case '&': used_bits |= 0x800; break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -1187,7 +1191,7 @@ static const char *
 riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 	  bfd_reloc_code_real_type *imm_reloc)
 {
-  char *s;
+  char *s,*s2;
   const char *args;
   char c = 0;
   struct riscv_opcode *insn, *end = &riscv_opcodes[NUMOPCODES];
@@ -1580,7 +1584,7 @@ rvc_lui:
             ip->insn_opcode |= val << 26;
             s+=strlen(s);
             continue;
-           case '$':
+        case '$':
             base = 10;
             if (strlen(s) > 1) { /* make sure we have more than one char */
                 if (s[1] == 'x') { /* do we have hex value? */
@@ -1593,7 +1597,53 @@ rvc_lui:
                 break; /* goto error */
             }
             ip->insn_opcode |= val << 20;
-            s+=strlen(s);
+            s2=strchr(s,',');
+            if(s2!=NULL){
+              s = s2;
+            } else {
+              s+=strlen(s);
+            }
+            continue;
+        case '#':
+            base = 10;
+            if (strlen(s) > 1) { /* make sure we have more than one char */
+                if (s[1] == 'x') { /* do we have hex value? */
+                    base = 16;
+                }
+            }
+            val = strtoul(s, endp, base);
+            if (val > 15) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+            ip->insn_opcode |= val << 7;
+            s2=strchr(s,',');
+            if(s2!=NULL){
+              s = s2;
+            } else {
+              s+=strlen(s);
+            }
+            
+            continue;
+        case '&':
+            base = 10;
+            if (strlen(s) > 1) { /* make sure we have more than one char */
+                if (s[1] == 'x') { /* do we have hex value? */
+                    base = 16;
+                }
+            }
+            val = strtoul(s, endp, base);
+            if (val > 1) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+            ip->insn_opcode |= val << 11;
+            s2=strchr(s,',');
+            if(s2!=NULL){
+              s = s2;
+            } else {
+              s+=strlen(s);
+            }
             continue;
 	    case 'D':		/* floating point rd */
 	    case 'S':		/* floating point rs1 */
