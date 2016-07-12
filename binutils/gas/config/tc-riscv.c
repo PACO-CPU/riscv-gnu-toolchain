@@ -550,7 +550,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
     case '@': used_bits |= 0xfc000000; break;
     case '$': used_bits |= 0x3f00000; break;
-    case '#': used_bits |= 0x780; break;
+    case '#': used_bits |= 0xfc000780; break;
     case '&': used_bits |= 0x800; break;
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
@@ -566,7 +566,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '@': used_bits |= 0xfc000000;break;
       case '$': used_bits |= 0x3f00000; break;
-      case '#': used_bits |= 0x780; break;
+      case '#': used_bits |= 0xfc000780; break;
       case '&': used_bits |= 0x800; break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
@@ -1199,7 +1199,7 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
   unsigned int regno;
   char save_c = 0;
   int argnum, base;
-  unsigned int val;
+  unsigned int val,valhi =0 ,vallo =0;
   const struct percent_op_match *p;
   const char *error = "unrecognized opcode";
 
@@ -1596,7 +1596,7 @@ rvc_lui:
                 s += strlen(s);
                 break; /* goto error */
             }
-            ip->insn_opcode |= val << 20;
+            ip->insn_opcode |= val << 26;
             s2=strchr(s,',');
             if(s2!=NULL){
               s = s2;
@@ -1604,7 +1604,7 @@ rvc_lui:
               s+=strlen(s);
             }
             continue;
-        case '#':
+        case '#':  // Imm Field in LUT Instructions
             base = 10;
             if (strlen(s) > 1) { /* make sure we have more than one char */
                 if (s[1] == 'x') { /* do we have hex value? */
@@ -1612,11 +1612,30 @@ rvc_lui:
                 }
             }
             val = strtoul(s, endp, base);
-            if (val > 15) {
+
+            if (val > 1023) {
                 s += strlen(s);
                 break; /* goto error */
             }
-            ip->insn_opcode |= val << 7;
+
+            vallo = val & 15;        //0000001111
+            valhi = (val >> 4) & 63; 
+
+            if (vallo > 15) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+
+            if (valhi > 63) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+
+            ip->insn_opcode |= vallo << 7;
+            ip->insn_opcode |= valhi << 26;
+
+            // ip->insn_opcode |= val << 7;
+
             s2=strchr(s,',');
             if(s2!=NULL){
               s = s2;
@@ -1625,7 +1644,7 @@ rvc_lui:
             }
             
             continue;
-        case '&':
+        case '&': // Reset field in LUT Intructions
             base = 10;
             if (strlen(s) > 1) { /* make sure we have more than one char */
                 if (s[1] == 'x') { /* do we have hex value? */
@@ -1633,10 +1652,12 @@ rvc_lui:
                 }
             }
             val = strtoul(s, endp, base);
+
             if (val > 1) {
                 s += strlen(s);
                 break; /* goto error */
             }
+
             ip->insn_opcode |= val << 11;
             s2=strchr(s,',');
             if(s2!=NULL){
