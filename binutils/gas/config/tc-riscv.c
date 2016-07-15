@@ -519,6 +519,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case 'd': USE_BITS (OP_MASK_RD, OP_SH_RD); break;
 	  case 's': USE_BITS (OP_MASK_RS1, OP_SH_RS1); break;
 	  case 't': USE_BITS (OP_MASK_RS2, OP_SH_RS2); break;
+    case 'r': USE_BITS (OP_MASK_RS3, OP_SH_RS3); break;
 	  case 'j': USE_BITS (OP_MASK_CUSTOM_IMM, OP_SH_CUSTOM_IMM); break;
 	  }
 	break;
@@ -548,10 +549,10 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case 'V': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case '<': used_bits |= ENCODE_RVC_IMM(-1U); break;
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
-    case '@': used_bits |= 0xfc000000; break;
-    case '$': used_bits |= 0x3f00000; break;
-    case '#': used_bits |= 0xfc000780; break;
-    case '&': used_bits |= 0x800; break;
+    case '@': used_bits |= 0xfc000000; break; 
+    case '$': used_bits |= 0x6007000; break;  /* lsel */
+    case '#': used_bits |= 0x38000F00; break; /* offset */
+    case '&': used_bits |= 0x80; break;      /* reset */
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
 	  default:
@@ -565,9 +566,9 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case ')': break;
       case '<': USE_BITS (OP_MASK_SHAMTW,	OP_SH_SHAMTW);	break;
       case '@': used_bits |= 0xfc000000;break;
-      case '$': used_bits |= 0x3f00000; break;
-      case '#': used_bits |= 0xfc000780; break;
-      case '&': used_bits |= 0x800; break;
+      case '$': used_bits |= 0x6007000; break;
+      case '#': used_bits |= 0x38000F00; break;
+      case '&': used_bits |= 0x80; break;
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -582,6 +583,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case 'm':	USE_BITS (OP_MASK_RM,		OP_SH_RM);	break;
       case 's':	USE_BITS (OP_MASK_RS1,		OP_SH_RS1);	break;
       case 't':	USE_BITS (OP_MASK_RS2,		OP_SH_RS2);	break;
+      case 'r': USE_BITS (OP_MASK_RS3,    OP_SH_RS3); break;
       case 'P':	USE_BITS (OP_MASK_PRED,		OP_SH_PRED); break;
       case 'Q':	USE_BITS (OP_MASK_SUCC,		OP_SH_SUCC); break;
       case 'o':
@@ -779,6 +781,10 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	  INSERT_OPERAND (RS2, insn, va_arg (args, int));
 	  continue;
 
+  case 'r':
+    INSERT_OPERAND (RS3, insn, va_arg (args, int));
+    continue;
+
 	case '>':
 	  INSERT_OPERAND (SHAMT, insn, va_arg (args, int));
 	  continue;
@@ -928,6 +934,7 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
   int rd = (ip->insn_opcode >> OP_SH_RD) & OP_MASK_RD;
   int rs1 = (ip->insn_opcode >> OP_SH_RS1) & OP_MASK_RS1;
   int rs2 = (ip->insn_opcode >> OP_SH_RS2) & OP_MASK_RS2;
+  int rs3 = (ip->insn_opcode >> OP_SH_RS3) & OP_MASK_RS3;
   int mask = ip->insn_mo->mask;
 
   switch (mask)
@@ -1267,6 +1274,9 @@ riscv_ip (char *str, struct riscv_cl_insn *ip, expressionS *imm_expr,
 		  case 't':
 		    INSERT_OPERAND (RS2, *ip, imm_expr->X_add_number);
 		    break;
+      case 'r':
+        INSERT_OPERAND (RS3, *ip, imm_expr->X_add_number);
+        break;        
 		  }
 		imm_expr->X_op = O_absent;
 		s = expr_end;
@@ -1546,6 +1556,7 @@ rvc_lui:
 	    case 'd':		/* destination register */
 	    case 's':		/* source register */
 	    case 't':		/* target register */
+      case 'r':   /* another source register */
 	      if (reg_lookup (&s, RCLASS_GPR, &regno))
 		{
 		  c = *args;
@@ -1565,6 +1576,9 @@ rvc_lui:
 		    case 't':
 		      INSERT_OPERAND (RS2, *ip, regno);
 		      break;
+        case 'r':
+          INSERT_OPERAND (RS3, *ip, regno);
+          break;
 		    }
 		  continue;
 		}
@@ -1584,7 +1598,7 @@ rvc_lui:
             ip->insn_opcode |= val << 26;
             s+=strlen(s);
             continue;
-        case '$':
+        case '$': //lsel Field in LUT Instructions
             base = 10;
             if (strlen(s) > 1) { /* make sure we have more than one char */
                 if (s[1] == 'x') { /* do we have hex value? */
@@ -1592,11 +1606,28 @@ rvc_lui:
                 }
             }
             val = strtoul(s, endp, base);
-            if (val > 63) {
+            if (val > 31) {
                 s += strlen(s);
                 break; /* goto error */
             }
-            ip->insn_opcode |= val << 26;
+
+            vallo = val & 7;        //00111
+            valhi = (val >> 3) & 3; 
+
+            if (vallo > 7) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+
+            if (valhi > 3) {
+                s += strlen(s);
+                break; /* goto error */
+            }
+
+            ip->insn_opcode |= vallo << 12;
+            ip->insn_opcode |= valhi << 25;
+
+            // ip->insn_opcode |= val << 26;
             s2=strchr(s,',');
             if(s2!=NULL){
               s = s2;
@@ -1604,7 +1635,7 @@ rvc_lui:
               s+=strlen(s);
             }
             continue;
-        case '#':  // Imm Field in LUT Instructions
+        case '#':  // Offset Field in LUT Instructions
             base = 10;
             if (strlen(s) > 1) { /* make sure we have more than one char */
                 if (s[1] == 'x') { /* do we have hex value? */
@@ -1613,26 +1644,26 @@ rvc_lui:
             }
             val = strtoul(s, endp, base);
 
-            if (val > 1023) {
+            if (val > 127) {
                 s += strlen(s);
                 break; /* goto error */
             }
 
-            vallo = val & 15;        //0000001111
-            valhi = (val >> 4) & 63; 
+            vallo = val & 15;        //0001111
+            valhi = (val >> 4) & 7; 
 
             if (vallo > 15) {
                 s += strlen(s);
                 break; /* goto error */
             }
 
-            if (valhi > 63) {
+            if (valhi > 7) {
                 s += strlen(s);
                 break; /* goto error */
             }
 
-            ip->insn_opcode |= vallo << 7;
-            ip->insn_opcode |= valhi << 26;
+            ip->insn_opcode |= vallo << 8;
+            ip->insn_opcode |= valhi << 27;
 
             // ip->insn_opcode |= val << 7;
 
@@ -1658,7 +1689,7 @@ rvc_lui:
                 break; /* goto error */
             }
 
-            ip->insn_opcode |= val << 11;
+            ip->insn_opcode |= val << 7;
             s2=strchr(s,',');
             if(s2!=NULL){
               s = s2;
