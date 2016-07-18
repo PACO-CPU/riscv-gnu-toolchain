@@ -119,6 +119,7 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
   int rs1 = (l >> OP_SH_RS1) & OP_MASK_RS1;
   int rd = (l >> OP_SH_RD) & OP_MASK_RD;
   fprintf_ftype print = info->fprintf_func;
+  unsigned int immlo=0,immhi=0;
 
   if (*d != '\0')
     print (info->stream, "\t");
@@ -252,6 +253,11 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
 		 riscv_gpr_names[EXTRACT_OPERAND (RS2, l)]);
 	  break;
 
+	case 'r':
+	  print (info->stream, "%s",
+		 riscv_gpr_names[EXTRACT_OPERAND (RS3, l)]);
+	  break;
+
 	case 'u':
 	  print (info->stream, "0x%x",
 		 (unsigned) EXTRACT_UTYPE_IMM (l) >> RISCV_IMM_BITS);
@@ -261,13 +267,27 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
          (unsigned) ((l & 0xfc000000) >> 26));
       break;
     case '$': 
-      print (info->stream, "0x%x",
-         (unsigned) ((l & 0x3f00000) >> 20));
+    // LutSelect in LUT Instructions
+      immlo = (l & 0x7000) >> 12;
+      immhi = (l & 0x6000000) >> 25;
+      immhi = (immhi << 3) | immlo;
+      print (info->stream, "0x%x",immhi);
+
+      //print (info->stream, "0x%x",(unsigned) ((l & 0x3f00000) >> 20));
       break;
     case '#':
-       print (info->stream, "0x%x",(unsigned) ((l & 0x780) >> 7));
+    // Offset in LUT Instructions
+       immlo = (l & 0xF00) >> 8;
+       immhi = (l & 0x38000000) >> 27;
+       immhi = (immhi << 4) | immlo;
+       print (info->stream, "0x%x",immhi);
+       //print (info->stream, "0x%x",(unsigned) ((l & 0x780) >> 7));
+       //print (info->stream, "0x%x",(unsigned) ((l & 0xfc000000) >> 26));
+       break;
     case '&':
-       print (info->stream, "0x%x",(unsigned) ((l & 0x800) >> 11));
+    // Reset in LUT Instructions
+       print (info->stream, "0x%x",(unsigned) ((l & 0x80) >> 7));
+       break;
 	case 'm':
 	  arg_print (info, EXTRACT_OPERAND (RM, l),
 		     riscv_rm, ARRAY_SIZE (riscv_rm));
