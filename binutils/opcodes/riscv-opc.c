@@ -612,6 +612,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 /*Paco lut instructions */
 /* $ -> lsel; # -> offset; & -> reset */
 {"lutl", "I",  "s,$,#,&", MATCH_LUTL, MASK_LUTL, match_opcode, 0},
+{"luts", "I",  "d,$", MATCH_LUTS, MASK_LUTS, match_opcode, 0},
 {"lute", "I",  "d,s,$", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
 {"lute3", "I",  "d,s,t,r,$", MATCH_LUTE3, MASK_LUTE3, match_opcode, 0},
 
