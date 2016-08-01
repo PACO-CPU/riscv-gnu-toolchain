@@ -288,6 +288,9 @@ print_insn_args (const char *d, insn_t l, bfd_vma pc, disassemble_info *info)
     // Reset in LUT Instructions
        print (info->stream, "0x%x",(unsigned) ((l & 0x80) >> 7));
        break;
+    case '~': // strange
+      print(info->stream,"0x%x",(l>>27)&0x3);
+      break;
 	case 'm':
 	  arg_print (info, EXTRACT_OPERAND (RM, l),
 		     riscv_rm, ARRAY_SIZE (riscv_rm));

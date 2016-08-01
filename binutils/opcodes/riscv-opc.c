@@ -613,8 +613,10 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 /* $ -> lsel; # -> offset; & -> reset */
 {"lutl", "I",  "s,$,#,&", MATCH_LUTL, MASK_LUTL, match_opcode, 0},
 {"luts", "I",  "d,$", MATCH_LUTS, MASK_LUTS, match_opcode, 0},
-{"lute", "I",  "d,s,$", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
-{"lute3", "I",  "d,s,t,r,$", MATCH_LUTE3, MASK_LUTE3, match_opcode, 0},
+{"lute", "I",  "d,s,$,~", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
+{"lute2", "I",  "d,s,t,$,~", MATCH_LUTE2, MASK_LUTE2, match_opcode, 0},
+{"lutw", "I",  "s,$,~", MATCH_LUTW, MASK_LUTW, match_opcode, 0},
+{"lutw2", "I",  "s,t,$,~", MATCH_LUTW2, MASK_LUTW2, match_opcode, 0},
 
 /* PACO custom IALU instructions */
 {"add.approx", "I",  "d,s,t,@", MATCH_ADD_APPROX, MASK_ADD_APPROX, match_opcode, 0},

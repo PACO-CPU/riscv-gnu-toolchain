@@ -550,9 +550,10 @@ validate_riscv_insn (const struct riscv_opcode *opc)
 	  case '<': used_bits |= ENCODE_RVC_IMM(-1U); break;
 	  case '>': used_bits |= ENCODE_RVC_IMM(-1U); break;
     case '@': used_bits |= 0xfc000000; break; 
-    case '$': used_bits |= 0x6007000; break;  /* lsel */
+    case '$': used_bits |= 0x06007000; break; /* lsel */
     case '#': used_bits |= 0x38000F00; break; /* offset */
-    case '&': used_bits |= 0x80; break;      /* reset */
+    case '&': used_bits |= 0x00000080; break; /* reset */
+    case '~': used_bits |= 0x18000000; break; /* strange */
 	  case 'T': USE_BITS (OP_MASK_CRS2, OP_SH_CRS2); break;
 	  case 'D': USE_BITS (OP_MASK_CRS2S, OP_SH_CRS2S); break;
 	  default:
@@ -569,6 +570,7 @@ validate_riscv_insn (const struct riscv_opcode *opc)
       case '$': used_bits |= 0x6007000; break;
       case '#': used_bits |= 0x38000F00; break;
       case '&': used_bits |= 0x80; break;
+      case '~': used_bits |= 0x18000000; break; /* strange */
       case '>':	USE_BITS (OP_MASK_SHAMT,	OP_SH_SHAMT);	break;
       case 'A': break;
       case 'D':	USE_BITS (OP_MASK_RD,		OP_SH_RD);	break;
@@ -1690,6 +1692,21 @@ rvc_lui:
             }
 
             ip->insn_opcode |= val << 7;
+            s2=strchr(s,',');
+            if(s2!=NULL){
+              s = s2;
+            } else {
+              s+=strlen(s);
+            }
+            continue;
+        case '~': // strange
+            val=strtoul(s,endp,0);
+            if (val>3) {
+              s+=strlen(s);
+              break;
+            }
+            ip->insn_opcode|= val<<27;
+
             s2=strchr(s,',');
             if(s2!=NULL){
               s = s2;
