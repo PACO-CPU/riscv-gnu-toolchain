@@ -615,6 +615,7 @@ const struct riscv_opcode riscv_builtin_opcodes[] =
 {"luts", "I",  "d,$", MATCH_LUTS, MASK_LUTS, match_opcode, 0},
 {"lute", "I",  "d,s,$,~", MATCH_LUTE, MASK_LUTE, match_opcode, 0},
 {"lute2", "I",  "d,s,t,$,~", MATCH_LUTE2, MASK_LUTE2, match_opcode, 0},
+{"lute3", "I",   "d,s,t,r,$", 0, (int) M_LUTE3,  match_never, INSN_MACRO },
 {"lutw", "I",  "s,$,~", MATCH_LUTW, MASK_LUTW, match_opcode, 0},
 {"lutw2", "I",  "s,t,$,~", MATCH_LUTW2, MASK_LUTW2, match_opcode, 0},
 

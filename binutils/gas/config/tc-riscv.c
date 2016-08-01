@@ -754,6 +754,7 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
   struct riscv_cl_insn insn;
   bfd_reloc_code_real_type r;
   va_list args;
+  int tmp;
 
   va_start (args, fmt);
 
@@ -790,6 +791,14 @@ macro_build (expressionS *ep, const char *name, const char *fmt, ...)
 	case '>':
 	  INSERT_OPERAND (SHAMT, insn, va_arg (args, int));
 	  continue;
+  case '$':
+    tmp=va_arg(args,int);
+    INSERT_OPERAND (LSLO, insn, tmp);
+    INSERT_OPERAND (LSHI, insn, tmp);
+    continue;
+  case '~':
+    INSERT_OPERAND (STRANGE, insn, va_arg (args,int));
+    continue;
 	case 'j':
 	case 'u':
 	case 'q':
@@ -928,6 +937,13 @@ load_const (int reg, expressionS *ep)
     }
 }
 
+/* 3-register lut execution pseudo-instruction translated to lutw2, lute.  */
+static void
+riscv_lute3 (int destreg, int srcreg1, int srcreg2, int srcreg3, int lutsel) {
+  macro_build (NULL, "lutw2", "s,t,$,~",srcreg1,srcreg2,lutsel,0);
+  macro_build (NULL, "lute", "d,s,$,~",destreg,srcreg3,lutsel,2);
+}
+
 /* Expand RISC-V assembly macros into one or more instructions.  */
 static void
 macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
@@ -937,6 +953,9 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
   int rs1 = (ip->insn_opcode >> OP_SH_RS1) & OP_MASK_RS1;
   int rs2 = (ip->insn_opcode >> OP_SH_RS2) & OP_MASK_RS2;
   int rs3 = (ip->insn_opcode >> OP_SH_RS3) & OP_MASK_RS3;
+  int lutsel = 
+    ((ip->insn_opcode >> OP_SH_LSLO) & OP_MASK_LSLO) |
+    ((ip->insn_opcode >> OP_SH_LSHI) & OP_MASK_LSHI);
   int mask = ip->insn_mo->mask;
 
   switch (mask)
@@ -1048,6 +1067,10 @@ macro (struct riscv_cl_insn *ip, expressionS *imm_expr,
 
     case M_CALL:
       riscv_call (rd, rs1, imm_expr, *imm_reloc);
+      break;
+
+    case M_LUTE3:
+      riscv_lute3(rd,rs1,rs2,rs3,lutsel);
       break;
 
     default:

@@ -216,6 +216,16 @@ static const char * const riscv_pred_succ[16] = {
 #define OP_MASK_RL		0x1
 #define OP_SH_RL		25
 
+// LSLO AND LSHI work with the *entire* lutsel value, LSHI just uses the top bits
+#define OP_SH_LSLO 12
+#define OP_MASK_LSLO 0x6
+#define OP_SH_LSHI 22
+#define OP_MASK_LSHI 0x18
+
+#define OP_SH_STRANGE 27
+#define OP_MASK_STRANGE 0x3
+
+
 #define OP_MASK_CUSTOM_IMM	0x7f
 #define OP_SH_CUSTOM_IMM	25
 #define OP_MASK_CSR		0xfff
@@ -326,6 +336,7 @@ enum
   M_CALL,
   M_J,
   M_LI,
+  M_LUTE3,
   M_NUM_MACROS
 };
 
